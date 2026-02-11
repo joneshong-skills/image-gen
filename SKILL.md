@@ -6,6 +6,7 @@ description: >-
   "用 Grok 生成圖片", "用 Gemini 生成圖片", "make me an image",
   or discusses AI image generation via Grok or Gemini web platforms.
 version: 0.2.1
+tools: mcp__playwright__browser_navigate, mcp__playwright__browser_snapshot, mcp__playwright__browser_type, mcp__playwright__browser_click, mcp__playwright__browser_evaluate, mcp__playwright__browser_wait_for, mcp__playwright__browser_take_screenshot
 argument-hint: "描述想要的圖片（中文或英文皆可）"
 ---
 
