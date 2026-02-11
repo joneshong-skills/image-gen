@@ -162,7 +162,7 @@ Limits reset at **midnight UTC** for consumer app, **midnight Pacific Time** for
 | Issue | Platform | Solution |
 |-------|----------|----------|
 | "Sign in required" | Both | User must manually log in once in the Playwright browser |
-| Image not appearing | Both | Increase wait time, check `mcp__browser-tools__getConsoleErrors` |
+| Image not appearing | Both | Increase wait time, check `mcp__playwright__browser_console_messages` (level=error) |
 | Rate limit hit | Grok | Wait 2 hours or switch to Gemini |
 | Content refused | Gemini | Rephrase with less specific terms, or switch to Grok |
 | Page layout changed | Both | Take screenshot, re-snapshot, adapt to new element refs |
@@ -174,8 +174,8 @@ Limits reset at **midnight UTC** for consumer app, **midnight Pacific Time** for
 
 ### Diagnostic Tools
 
-1. `mcp__browser-tools__getConsoleErrors` — check for JavaScript errors
-2. `mcp__browser-tools__getNetworkErrors` — check for failed API calls
+1. `mcp__playwright__browser_console_messages` (level=error) — check for JavaScript errors
+2. `mcp__playwright__browser_network_requests` (includeStatic=false) — check for failed API calls
 3. `mcp__playwright__browser_take_screenshot` — visual state capture
 4. `mcp__playwright__browser_snapshot` — accessibility tree for element refs
 

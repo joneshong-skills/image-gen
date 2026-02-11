@@ -200,8 +200,8 @@ the platform.
 | Page not loaded / login required | Detect login page via snapshot, instruct user to log in manually |
 | Image not appearing after wait | Extend wait by 15s, re-snapshot; if still missing, report timeout |
 | Unexpected page layout | Take screenshot for debugging, report to user |
-| JavaScript errors | Use `mcp__browser-tools__getConsoleErrors` to diagnose |
-| Network failures | Use `mcp__browser-tools__getNetworkErrors` to diagnose |
+| JavaScript errors | Use `mcp__playwright__browser_console_messages` (level=error) to diagnose |
+| Network failures | Use `mcp__playwright__browser_network_requests` to diagnose |
 
 ## Platform Limits Quick Reference
 
