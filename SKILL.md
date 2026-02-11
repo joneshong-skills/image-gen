@@ -5,7 +5,7 @@ description: >-
   "create an image", "draw a picture", "幫我生成圖片", "產生圖片",
   "用 Grok 生成圖片", "用 Gemini 生成圖片", "make me an image",
   or discusses AI image generation via Grok or Gemini web platforms.
-version: 0.2.0
+version: 0.2.1
 argument-hint: "描述想要的圖片（中文或英文皆可）"
 ---
 
@@ -205,15 +205,13 @@ the platform.
 
 ## Platform Limits Quick Reference
 
-| | Grok | Gemini |
+| | Grok (Free) | Gemini (Free) |
 |---|---|---|
-| Free tier | ~10 images / 2hr | 100/day standard, 2/day thinking |
-| Pro tier | 50-100 / 2hr (Premium+) | 1,000/day (AI Pro) |
-| Speed | 3-5 seconds | 10-30 seconds |
-| Resolution | Default auto; supports 13+ ratios via prompt | Up to 4K |
-| Text rendering | Unreliable | Excellent |
-| Content policy | Permissive | Strict |
-| Best for | Speed, portraits, creative | Text, precision, professional |
+| Images | ~10 / 2hr | 100/day, 2/day thinking |
+| Speed | 3-5s | 10-30s |
+
+For detailed tier pricing, rate limits, content policies, and decision matrix,
+see `references/platform-comparison.md`.
 
 ## Important Notes
 
