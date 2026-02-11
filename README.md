@@ -46,7 +46,7 @@ Once installed, ask Claude to generate images:
 | Speed | 3-5 seconds | 10-30 seconds |
 | Text rendering | Unreliable | Excellent |
 | Content policy | Permissive | Strict |
-| Resolution | Fixed 4:3 | Up to 4K |
+| Resolution | Flexible ratios (13+ including auto) | Up to 4K |
 | Free limit | ~10/2hr | 100/day standard, 2/day thinking |
 | Best for | Speed, portraits, creative | Text, precision, professional |
 
