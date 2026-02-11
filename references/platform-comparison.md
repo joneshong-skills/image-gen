@@ -57,7 +57,13 @@ Numbers above are aggregated from user reports and third-party analysis.
 ### Playwright Automation Notes
 - Chat input is a standard textarea or contenteditable div
 - Image appears inline in the chat response as an `<img>` element
-- Download option may appear on hover or as a button near the image
+- Download button triggers a native OS save dialog — Playwright cannot interact with it
+- **Image download**: Use the Navigate-to-Image approach instead of the download button:
+  1. `mcp__browser-tools__getNetworkLogs` → find `assets.grok.com/.../image.jpg` URLs (status 200)
+  2. `mcp__playwright__browser_navigate` → navigate directly to the image URL (browser has auth)
+  3. `mcp__playwright__browser_evaluate` → extract via `canvas.drawImage` + `toDataURL`
+  4. Decode base64 and save to disk via Bash
+- CDN images (`assets.grok.com`) return 403 for external tools (curl) — must use browser context
 - Rate limit errors appear as text messages in the chat response
 - No CAPTCHA typically encountered for normal usage
 - New chat button usually accessible from sidebar or top area
@@ -121,6 +127,8 @@ Limits reset at **midnight UTC** for consumer app, **midnight Pacific Time** for
 - Chat input may be textarea, contenteditable div, or custom component
 - Look for model selector or thinking toggle in the top area or toolbar
 - Images appear in response area, often with expand/download buttons
+- **Image download**: Same Navigate-to-Image approach as Grok — find image URLs in
+  `mcp__browser-tools__getNetworkLogs`, navigate to each URL, extract via canvas
 - Content policy rejections appear as text messages explaining the refusal
 - Interface is localized — element labels vary by `hl` parameter
 - Login required via Google account (session persists in Playwright browser)
@@ -158,6 +166,9 @@ Limits reset at **midnight UTC** for consumer app, **midnight Pacific Time** for
 | Page layout changed | Both | Take screenshot, re-snapshot, adapt to new element refs |
 | Slow loading | Gemini | Normal for thinking mode (30s+), extend wait to 45s |
 | Text response instead of image | Both | Ensure prompt prefix ("Generate an image: " / "Create an image of: ") is included |
+| CDN image 403 via curl | Both | CDN requires browser auth — use Navigate-to-Image approach instead |
+| Canvas toDataURL blank | Both | Ensure navigated directly to image URL (same-origin), not cross-origin embed |
+| Download button opens OS dialog | Both | Playwright cannot control native OS dialogs — use Navigate-to-Image instead |
 
 ### Diagnostic Tools
 

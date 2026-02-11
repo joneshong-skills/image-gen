@@ -77,8 +77,8 @@ Grok Chat mode is preferred over Imagine mode — fewer restrictions and shared 
    (Aurora generates in 3-5s, but allow buffer for network and rendering)
 6. `mcp__playwright__browser_snapshot` → check if image appeared in the response
 7. If image is visible (look for `img` elements or image containers in response area):
-   - `mcp__playwright__browser_take_screenshot` → capture the response area with the image
-   - Parse the snapshot for download links if available
+   - `mcp__playwright__browser_take_screenshot` → capture the viewport as a preview
+   - Proceed to **Step 4** to download original images
 8. If generation failed (rate limit, content policy, error message):
    - Report the error to the user
    - Suggest switching to Gemini as fallback
@@ -101,27 +101,80 @@ Enable thinking mode when available for highest quality output.
    (Thinking mode can take 20-30s, standard 10-15s)
 6. `mcp__playwright__browser_snapshot` → check if image appeared in the response
 7. If image is visible:
-   - `mcp__playwright__browser_take_screenshot` → capture the response with the image
-   - Look for download or expand buttons in the snapshot
+   - `mcp__playwright__browser_take_screenshot` → capture the viewport as a preview
+   - Proceed to **Step 4** to download original images
 8. If generation failed (content policy block, error):
    - Gemini has stricter content policies than Grok
    - Report the specific error
    - Suggest Grok as fallback if the content is within Grok's policies
 
-### Step 4 — Return Results
+### Step 4 — Download Original Images
 
-After successful generation:
+Download the original image files instead of relying on screenshots. The browser has valid
+authentication that external tools (curl) lack, so use a Navigate-to-Image approach.
 
-1. Take a screenshot of the generated image area using `mcp__playwright__browser_take_screenshot`
-2. Present the screenshot to the user
-3. Include a brief summary:
+#### 4a. Find Image URLs
+
+Use `mcp__browser-tools__getNetworkLogs` to retrieve network requests. Filter for image URLs:
+- **Grok**: Look for `assets.grok.com/users/.../generated/.../image.jpg` with status 200
+- **Gemini**: Look for image URLs in the response (patterns vary by generation mode)
+
+Extract unique image URLs from the network logs. Deduplicate by URL since each image may
+appear multiple times (thumbnail + full size).
+
+#### 4b. Navigate and Extract (per image)
+
+For each image URL:
+
+1. `mcp__playwright__browser_navigate` → the image URL directly
+   - The browser navigates with full auth cookies, bypassing CDN restrictions
+   - Page title shows dimensions (e.g., `image.jpg (960×960)`)
+2. `mcp__playwright__browser_evaluate` → extract image data via canvas:
+   ```js
+   () => {
+     const img = document.querySelector('img');
+     const canvas = document.createElement('canvas');
+     canvas.width = img.naturalWidth;
+     canvas.height = img.naturalHeight;
+     const ctx = canvas.getContext('2d');
+     ctx.drawImage(img, 0, 0);
+     return canvas.toDataURL('image/jpeg', 0.95).split(',')[1];
+   }
+   ```
+   - The image is the main document, so canvas access is not blocked by CORS
+   - The result (base64 string) is automatically saved to a tool-results file when it
+     exceeds the token limit
+3. Decode and save via Bash:
+   ```bash
+   cat <tool-results-file> | python3 -c "
+   import json, sys, base64
+   data = json.load(sys.stdin)
+   text = data[0]['text']
+   b64 = text.split('\"')[1]
+   sys.stdout.buffer.write(base64.b64decode(b64))
+   " > ~/Desktop/<filename>.jpg
+   ```
+4. Verify the file: check for JPEG header (`FF D8 FF`) and file size
+
+#### 4c. Present Results
+
+1. Use the Read tool to display the downloaded image to the user
+2. Include a brief summary:
    - Platform used (Grok / Gemini)
    - The optimized prompt that was submitted
-   - Any relevant notes (resolution, limitations)
-4. Ask the user if they want:
+   - File paths on disk (e.g., `~/Desktop/image-name-1.jpg`)
+   - Image dimensions and file size
+3. Ask the user if they want:
    - Variations (re-run with modified prompt)
    - Switch platform (try the other platform with the same prompt)
    - Prompt adjustments (modify specific aspects)
+
+#### Fallback: Screenshot Only
+
+If the Navigate-to-Image download fails (network log unavailable, canvas blocked, etc.),
+fall back to `mcp__playwright__browser_take_screenshot` and present the screenshot instead.
+Inform the user that only a screenshot is available and suggest manually downloading from
+the platform.
 
 ## Error Handling & Fallback
 
@@ -151,7 +204,7 @@ After successful generation:
 
 - Both platforms require the user to be logged in via the browser that Playwright controls.
   The Playwright browser session persists — once logged in, subsequent calls reuse the session.
-- Always take a screenshot as proof of generation, even if the accessibility tree shows the image.
+- Always download original images via the Navigate-to-Image approach. Use screenshots only as fallback.
 - Grok's Aurora engine produces fixed 4:3 ratio images — inform the user if different ratios are needed.
 - Gemini's interface may vary by language/locale (the URL includes `hl=zh-TW` for Traditional Chinese).
 - If both platforms fail, suggest using the **image-prompt** skill standalone to get an optimized
