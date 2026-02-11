@@ -59,10 +59,12 @@ Numbers above are aggregated from user reports and third-party analysis.
 - Image appears inline in the chat response as an `<img>` element
 - Download button triggers a native OS save dialog — Playwright cannot interact with it
 - **Image download**: Use the Navigate-to-Image approach instead of the download button:
-  1. `mcp__browser-tools__getNetworkLogs` → find `assets.grok.com/.../image.jpg` URLs (status 200)
+  1. `mcp__playwright__browser_evaluate` → DOM query for `<img>` elements with `naturalWidth > 500`
   2. `mcp__playwright__browser_navigate` → navigate directly to the image URL (browser has auth)
   3. `mcp__playwright__browser_evaluate` → extract via `canvas.drawImage` + `toDataURL`
   4. Decode base64 and save to disk via Bash
+- **Note**: Do NOT use `mcp__browser-tools__getNetworkLogs` — BrowserTools monitors a separate
+  Chrome instance and cannot see Playwright's browser traffic
 - CDN images (`assets.grok.com`) return 403 for external tools (curl) — must use browser context
 - Rate limit errors appear as text messages in the chat response
 - No CAPTCHA typically encountered for normal usage
@@ -127,8 +129,8 @@ Limits reset at **midnight UTC** for consumer app, **midnight Pacific Time** for
 - Chat input may be textarea, contenteditable div, or custom component
 - Look for model selector or thinking toggle in the top area or toolbar
 - Images appear in response area, often with expand/download buttons
-- **Image download**: Same Navigate-to-Image approach as Grok — find image URLs in
-  `mcp__browser-tools__getNetworkLogs`, navigate to each URL, extract via canvas
+- **Image download**: Same Navigate-to-Image approach as Grok — find image URLs via
+  DOM query (`querySelectorAll('img')` with size filter), navigate to each URL, extract via canvas
 - Content policy rejections appear as text messages explaining the refusal
 - Interface is localized — element labels vary by `hl` parameter
 - Login required via Google account (session persists in Playwright browser)
