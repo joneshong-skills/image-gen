@@ -39,10 +39,10 @@ Numbers above are aggregated from user reports and third-party analysis.
 - **Human portraits**: Excellent face generation with natural skin textures
 - **Artistic variety**: Wide range of styles without explicit prompting
 - **Simple interface**: Just type in chat, no mode switching needed
+- **Flexible aspect ratios**: 13+ ratios (1:1, 16:9, 9:16, 4:3, 2:3, etc.) via prompt text or `auto` mode
 
 ### Weaknesses
 - **Text rendering**: Unreliable — often garbled or missing letters
-- **Fixed aspect ratio**: 4:3 only (1024x768), no ratio selection in free tier
 - **Prompt adherence**: Loosely follows complex multi-element prompts
 - **No image editing**: Cannot modify generated images in chat
 - **No batch generation**: One image at a time

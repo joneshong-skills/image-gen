@@ -210,7 +210,7 @@ the platform.
 | Free tier | ~10 images / 2hr | 100/day standard, 2/day thinking |
 | Pro tier | 50-100 / 2hr (Premium+) | 1,000/day (AI Pro) |
 | Speed | 3-5 seconds | 10-30 seconds |
-| Resolution | Fixed 4:3 (1024x768) | Up to 4K |
+| Resolution | Default auto; supports 13+ ratios via prompt | Up to 4K |
 | Text rendering | Unreliable | Excellent |
 | Content policy | Permissive | Strict |
 | Best for | Speed, portraits, creative | Text, precision, professional |
@@ -220,7 +220,8 @@ the platform.
 - Both platforms require the user to be logged in via the browser that Playwright controls.
   The Playwright browser session persists — once logged in, subsequent calls reuse the session.
 - Always download original images via the Navigate-to-Image approach. Use screenshots only as fallback.
-- Grok's Aurora engine produces fixed 4:3 ratio images — inform the user if different ratios are needed.
+- Grok supports aspect ratio control via prompt text (e.g., include "1:1", "16:9", "9:16" in the prompt).
+  When no ratio is specified, the model uses `auto` mode and selects the best ratio for the prompt.
 - Gemini's interface may vary by language/locale (the URL includes `hl=zh-TW` for Traditional Chinese).
 - If both platforms fail, suggest using the **image-prompt** skill standalone to get an optimized
   prompt for manual use on other platforms.
