@@ -5,7 +5,7 @@ description: >-
   "create an image", "draw a picture", "幫我生成圖片", "產生圖片",
   "用 Grok 生成圖片", "用 Gemini 生成圖片", "make me an image",
   or discusses AI image generation via Grok or Gemini web platforms.
-version: 0.1.0
+version: 0.2.0
 argument-hint: "描述想要的圖片（中文或英文皆可）"
 ---
 
@@ -70,9 +70,11 @@ Grok Chat mode is preferred over Imagine mode — fewer restrictions and shared 
 2. `mcp__playwright__browser_snapshot` → locate the chat input textarea
 3. Check if a new chat is needed. If existing conversation is unrelated to image generation,
    look for a "New chat" or "+" button and click it first.
-4. `mcp__playwright__browser_type` → ref=chat-input, text=optimized prompt, submit=true
+4. `mcp__playwright__browser_type` → ref=chat-input, text=optimized prompt
    - **Prompt prefix**: Prepend `Generate an image: ` to the optimized prompt to ensure
      Grok enters image generation mode rather than discussing the concept.
+   - Do NOT use `submit=true`. After typing, snapshot to locate the submit/send button and click it.
+     (`fill()` may not trigger key events; clicking the button is more reliable across UI changes.)
 5. `mcp__playwright__browser_wait_for` → time=15
    (Aurora generates in 3-5s, but allow buffer for network and rendering)
 6. `mcp__playwright__browser_snapshot` → check if image appeared in the response
@@ -95,8 +97,9 @@ Enable thinking mode when available for highest quality output.
    - If a "thinking" mode toggle is available, enable it
    - If an image generation option is visible, ensure it is active
    - Look for any canvas/creation mode toggle and enable image generation
-4. `mcp__playwright__browser_type` → ref=chat-input, text=optimized prompt, submit=true
+4. `mcp__playwright__browser_type` → ref=chat-input, text=optimized prompt
    - **Prompt prefix**: Prepend `Create an image of: ` to the optimized prompt
+   - After typing, snapshot to locate the submit/send button and click it.
 5. `mcp__playwright__browser_wait_for` → time=30
    (Thinking mode can take 20-30s, standard 10-15s)
 6. `mcp__playwright__browser_snapshot` → check if image appeared in the response
@@ -115,12 +118,24 @@ authentication that external tools (curl) lack, so use a Navigate-to-Image appro
 
 #### 4a. Find Image URLs
 
-Use `mcp__browser-tools__getNetworkLogs` to retrieve network requests. Filter for image URLs:
-- **Grok**: Look for `assets.grok.com/users/.../generated/.../image.jpg` with status 200
-- **Gemini**: Look for image URLs in the response (patterns vary by generation mode)
+Use `mcp__playwright__browser_evaluate` to query the DOM for generated image URLs:
 
-Extract unique image URLs from the network logs. Deduplicate by URL since each image may
-appear multiple times (thumbnail + full size).
+```js
+() => {
+  const imgs = document.querySelectorAll('img');
+  return Array.from(imgs)
+    .map(img => ({ src: img.src, width: img.naturalWidth, height: img.naturalHeight }))
+    .filter(i => i.width > 500);
+}
+```
+
+- Filter by `naturalWidth > 500` to exclude avatars, icons, and UI elements
+- **Grok**: Look for `assets.grok.com/users/.../generated/.../image.jpg` URLs
+- **Gemini**: Look for image URLs with large dimensions in the response
+- Deduplicate by `src` since each image may appear twice (thumbnail + full size)
+
+> **Note**: Do NOT use `mcp__browser-tools__getNetworkLogs` for this step. BrowserTools MCP
+> monitors a separate Chrome instance and cannot see Playwright's browser traffic.
 
 #### 4b. Navigate and Extract (per image)
 
