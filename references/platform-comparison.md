@@ -58,16 +58,14 @@ Numbers above are aggregated from user reports and third-party analysis.
 - Chat input is a standard textarea or contenteditable div
 - Image appears inline in the chat response as an `<img>` element
 - Download button triggers a native OS save dialog — Playwright cannot interact with it
-- **Image download**: Use the Navigate-to-Image approach instead of the download button:
-  1. `mcp__playwright__browser_evaluate` → DOM query for `<img>` elements with `naturalWidth > 500`
-  2. `mcp__playwright__browser_navigate` → navigate directly to the image URL (browser has auth)
-  3. `mcp__playwright__browser_evaluate` → extract via `canvas.drawImage` + `toDataURL`
-  4. Decode base64 and save to disk via Bash
+- **Image download**: Use the **macos-ui-automation** skill — click download button via Chrome
+  AppleScript, then handle the native save dialog via System Events
+- **Fallback (Fetch-in-Page)**: `fetch(url, { credentials: 'include' })` from the Grok page
+  works for image extraction. `credentials: 'include'` is **required** — CDN returns 403 without it
 - **Note**: Do NOT use `mcp__browser-tools__getNetworkLogs` — BrowserTools monitors a separate
   Chrome instance and cannot see Playwright's browser traffic
 - CDN images (`assets.grok.com`) return 403 for external tools (curl) — must use browser context
 - Rate limit errors appear as text messages in the chat response
-- No CAPTCHA typically encountered for normal usage
 - New chat button usually accessible from sidebar or top area
 
 ---
@@ -129,8 +127,11 @@ Limits reset at **midnight UTC** for consumer app, **midnight Pacific Time** for
 - Chat input may be textarea, contenteditable div, or custom component
 - Look for model selector or thinking toggle in the top area or toolbar
 - Images appear in response area, often with expand/download buttons
-- **Image download**: Same Navigate-to-Image approach as Grok — find image URLs via
-  DOM query (`querySelectorAll('img')` with size filter), navigate to each URL, extract via canvas
+- **Image download**: Use the **macos-ui-automation** skill — click "下載原尺寸圖片" button
+  via Chrome AppleScript, then handle the native save dialog via System Events
+- **Fallback (Navigate-to-Image)**: Navigate directly to the image URL, then extract via
+  `canvas.drawImage` + `toDataURL` (same-origin after navigation). `fetch()` from the
+  Gemini page is CORS-blocked; canvas on the Gemini page is tainted.
 - Content policy rejections appear as text messages explaining the refusal
 - Interface is localized — element labels vary by `hl` parameter
 - Login required via Google account (session persists in Playwright browser)
@@ -170,7 +171,10 @@ Limits reset at **midnight UTC** for consumer app, **midnight Pacific Time** for
 | Text response instead of image | Both | Ensure prompt prefix ("Generate an image: " / "Create an image of: ") is included |
 | CDN image 403 via curl | Both | CDN requires browser auth — use Navigate-to-Image approach instead |
 | Canvas toDataURL blank | Both | Ensure navigated directly to image URL (same-origin), not cross-origin embed |
-| Download button opens OS dialog | Both | Playwright cannot control native OS dialogs — use Navigate-to-Image instead |
+| Download button opens OS dialog | Both | Use **macos-ui-automation** skill to handle the native save dialog via AppleScript |
+| `fetch()` returns 403 on Grok | Grok | Must include `credentials: 'include'` in fetch options |
+| `fetch()` CORS error on Gemini | Gemini | Cross-origin blocked — must use Navigate-to-Image approach instead |
+| `browser_run_code` can't find elements | Both | MCP extension routes `page` to extension page — use `browser_evaluate` instead |
 
 ### Diagnostic Tools
 
