@@ -2,7 +2,15 @@
 
 ## Pending
 
+(none)
+
 ## Resolved
+
+### 2026-02-12 — AppleScript save dialog approach (applied in v0.4.0)
+- **Resolution**: Incorporated into SKILL.md Step 4. Chrome AppleScript triggers download button via `execute javascript`, System Events handles native save dialog. Dialog structure: `sheet 1 of window 1` → `splitter group 1` → `text field "儲存為："` + `pop up button "位置："` + `button "儲存"`. Replaced v0.3.0's Fetch-in-Page / Navigate-to-Image approach.
+
+### 2026-02-12 — Download approach research (superseded by v0.4.0, archived)
+- **Resolution**: Superseded by AppleScript approach in v0.4.0. Historical findings preserved: `browser_run_code` download fails (MCP extension architecture); Grok fetch-in-page works; Gemini requires Navigate-to-Image + canvas. These remain valid fallback approaches if AppleScript is unavailable, documented in SKILL.md "Fallback: Screenshot Only" section.
 
 ### 2026-02-11 — Grok free tier rate limits verified (dismissed)
 - **Resolution**: Perplexity research (24 sources) confirmed grok.com standalone is still free. Rate limits: ~10-20 images/day or ~10 per 2-hour window (rolling reset). X platform restricted to paid subscribers (Jan 2026), but grok.com unaffected. Current SKILL.md documentation ("~10 images/2hr") remains accurate.
