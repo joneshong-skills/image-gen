@@ -2,7 +2,12 @@
 
 ## Pending
 
-(none)
+### 2026-04-07 — Grok CF challenge caused by Safari cross-site tracking prevention
+- **Observation**: camoufox-cli and playwright-cli get stuck on CF challenge (`請稍候...`) when accessing grok.com. Safari works fine. Root cause: Safari 的「防止跨網站追蹤」設定與 Cloudflare cookie 機制衝突，不是 Grok 封鎖自動化瀏覽器。
+- **Impact**: Browser automation path for Grok unreliable. Use xAI API ($0.02/image) as primary automation path instead.
+- **Confidence**: HIGH — confirmed by user (Safari cross-site tracking is the cause).
+- **Resolution path**: xAI API (grok-2-image, $0.02/張) is the correct automation approach. API key already configured. Browser automation is a fallback for interactive use only.
+- **Trigger**: When /image-gen targets Grok, prefer xAI API over browser automation.
 
 ## Resolved
 

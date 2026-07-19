@@ -1,13 +1,10 @@
 ---
 name: image-gen
-description: >-
-  This skill should be used when the user asks to "generate an image",
-  "create an image", "draw a picture", "幫我生成圖片", "產生圖片",
-  "用 Grok 生成圖片", "用 Gemini 生成圖片", "make me an image",
-  or discusses AI image generation via Grok or Gemini web platforms.
+description: "image, gen, generate, create, draw, picture, 幫我生成圖片, 產生圖片, 用 Grok 生成圖片, 用 Gemini 生成圖片"
 version: 0.4.1
-tools: mcp__playwright__browser_navigate, mcp__playwright__browser_snapshot, mcp__playwright__browser_type, mcp__playwright__browser_click, mcp__playwright__browser_evaluate, mcp__playwright__browser_wait_for, mcp__playwright__browser_take_screenshot
+tools: Task, Bash, Read
 argument-hint: "描述想要的圖片（中文或英文皆可）"
+disable-model-invocation: true
 ---
 
 # Image Gen
@@ -32,10 +29,9 @@ direct API access is unavailable.
 
 ## Prerequisites
 
-- MCP Playwright server connected and browser logged in to:
-  - Grok (https://grok.com/) — fast creative generation
-  - Gemini (https://gemini.google.com/app) — text-in-image and precision
-- MCP Browser Tools server connected
+- `camoufox-cli` installed (primary, anti-detect Firefox, CF bypass)
+- `playwright-cli` installed (fallback for localhost)
+- Master camoufox profile at `~/.camoufox-profiles/master` with Grok + Gemini login
 - The **image-prompt** skill installed (`~/.claude/skills/image-prompt/`)
 
 ## Core Workflow
@@ -81,50 +77,25 @@ If the user specifies a platform, respect it unconditionally:
 
 Grok Chat mode is preferred over Imagine mode — fewer restrictions and shared quota with text chat.
 
-1. `mcp__playwright__browser_navigate` → `https://grok.com/`
-2. `mcp__playwright__browser_snapshot` → locate the chat input textarea
-3. Check if a new chat is needed. If existing conversation is unrelated to image generation,
-   look for a "New chat" or "+" button and click it first.
-4. `mcp__playwright__browser_type` → ref=chat-input, text=optimized prompt
-   - **Prompt prefix**: Prepend `Generate an image: ` to the optimized prompt to ensure
-     Grok enters image generation mode rather than discussing the concept.
-   - Do NOT use `submit=true`. After typing, snapshot to locate the submit/send button and click it.
-     (`fill()` may not trigger key events; clicking the button is more reliable across UI changes.)
-5. `mcp__playwright__browser_wait_for` → time=15
-   (Aurora generates in 3-5s, but allow buffer for network and rendering)
-6. `mcp__playwright__browser_snapshot` → check if image appeared in the response
-7. If image is visible (look for `img` elements or image containers in response area):
-   - `mcp__playwright__browser_take_screenshot` → capture the viewport as a preview
-   - Proceed to **Step 4** to download original images
-8. If generation failed (rate limit, content policy, error message):
-   - Report the error to the user
-   - Suggest switching to Gemini as fallback
-   - Rate limit message: "Grok free tier: ~10 images per 2-hour window. Try again later or switch to Gemini."
+Delegate to `browser` agent with this prompt:
+"Use camoufox-cli with --session grok --headed --persistent ~/.camoufox-profiles/master. Open https://grok.com/, use snapshot -i to find the chat input, fill it with 'Generate an image: {optimized prompt}', press Enter. Wait 15 seconds, use snapshot to check for image. If visible, use screenshot to capture. If rate limited or CF blocked, report error. Close session when done."
+
+If generation failed (rate limit, content policy):
+- Report the error to the user
+- Suggest switching to Gemini as fallback
+- Rate limit: "Grok free tier: ~10 images per 2-hour window"
 
 #### Route B: Gemini (Chat Mode with Thinking)
 
 Enable thinking mode when available for highest quality output.
 
-1. `mcp__playwright__browser_navigate` → `https://gemini.google.com/app?hl=zh-TW`
-2. `mcp__playwright__browser_snapshot` → locate the chat input area and model/mode selectors
-3. Before typing the prompt, configure the generation mode:
-   - Look for a model dropdown or mode selector in the top area or toolbar
-   - If a "thinking" mode toggle is available, enable it
-   - If an image generation option is visible, ensure it is active
-   - Look for any canvas/creation mode toggle and enable image generation
-4. `mcp__playwright__browser_type` → ref=chat-input, text=optimized prompt
-   - **Prompt prefix**: Prepend `Create an image of: ` to the optimized prompt
-   - After typing, snapshot to locate the submit/send button and click it.
-5. `mcp__playwright__browser_wait_for` → time=30
-   (Thinking mode can take 20-30s, standard 10-15s)
-6. `mcp__playwright__browser_snapshot` → check if image appeared in the response
-7. If image is visible:
-   - `mcp__playwright__browser_take_screenshot` → capture the viewport as a preview
-   - Proceed to **Step 4** to download original images
-8. If generation failed (content policy block, error):
-   - Gemini has stricter content policies than Grok
-   - Report the specific error
-   - Suggest Grok as fallback if the content is within Grok's policies
+Delegate to `browser` agent with this prompt:
+"Use camoufox-cli with --session gemini --headed --persistent ~/.camoufox-profiles/master. Open https://gemini.google.com/app?hl=zh-TW, use snapshot -i to find the chat input, fill it with 'Create an image of: {optimized prompt}', press Enter. Wait 30 seconds (thinking mode takes longer), use snapshot to check for image. If visible, use screenshot to capture. If blocked, report error. Close session when done."
+
+If generation failed (content policy block):
+- Gemini has stricter content policies than Grok
+- Report the specific error
+- Suggest Grok as fallback
 
 ### Step 4 — Download Original Images
 
@@ -169,7 +140,7 @@ Follow the **macos-ui-automation** skill's save dialog workflow:
 #### Fallback: Screenshot Only
 
 If the download button is not found or AppleScript fails (e.g., missing Accessibility
-permission), fall back to `mcp__playwright__browser_take_screenshot` and present the
+permission), fall back to asking the browser agent to take a screenshot and present the
 screenshot instead. Inform the user that only a screenshot is available and suggest
 manually downloading from the platform.
 
@@ -182,8 +153,8 @@ manually downloading from the platform.
 | Page not loaded / login required | Detect login page via snapshot, instruct user to log in manually |
 | Image not appearing after wait | Extend wait by 15s, re-snapshot; if still missing, report timeout |
 | Unexpected page layout | Take screenshot for debugging, report to user |
-| JavaScript errors | Use `mcp__playwright__browser_console_messages` (level=error) to diagnose |
-| Network failures | Use `mcp__playwright__browser_network_requests` to diagnose |
+| JavaScript errors | Check browser agent error output for diagnostics |
+| Network failures | Check browser agent error output for diagnostics |
 
 ## Platform Limits Quick Reference
 

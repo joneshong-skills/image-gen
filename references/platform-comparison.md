@@ -163,7 +163,7 @@ Limits reset at **midnight UTC** for consumer app, **midnight Pacific Time** for
 | Issue | Platform | Solution |
 |-------|----------|----------|
 | "Sign in required" | Both | User must manually log in once in the Playwright browser |
-| Image not appearing | Both | Increase wait time, check `mcp__playwright__browser_console_messages` (level=error) |
+| Image not appearing | Both | Increase wait time, check `npx @playwright/cli -s=<session> console` for JS errors |
 | Rate limit hit | Grok | Wait 2 hours or switch to Gemini |
 | Content refused | Gemini | Rephrase with less specific terms, or switch to Grok |
 | Page layout changed | Both | Take screenshot, re-snapshot, adapt to new element refs |
@@ -174,14 +174,14 @@ Limits reset at **midnight UTC** for consumer app, **midnight Pacific Time** for
 | Download button opens OS dialog | Both | Use **macos-ui-automation** skill to handle the native save dialog via AppleScript |
 | `fetch()` returns 403 on Grok | Grok | Must include `credentials: 'include'` in fetch options |
 | `fetch()` CORS error on Gemini | Gemini | Cross-origin blocked — must use Navigate-to-Image approach instead |
-| `browser_run_code` can't find elements | Both | MCP extension routes `page` to extension page — use `browser_evaluate` instead |
+| `run-code` can't find elements | Both | Wrap in `async (page) => { ... }` — top-level `const`/`var` fails |
 
 ### Diagnostic Tools
 
-1. `mcp__playwright__browser_console_messages` (level=error) — check for JavaScript errors
-2. `mcp__playwright__browser_network_requests` (includeStatic=false) — check for failed API calls
-3. `mcp__playwright__browser_take_screenshot` — visual state capture
-4. `mcp__playwright__browser_snapshot` — accessibility tree for element refs
+1. `npx @playwright/cli -s=<session> console` — check for JavaScript errors
+2. `npx @playwright/cli -s=<session> network` — check for failed API calls
+3. `npx @playwright/cli -s=<session> screenshot` — visual state capture (saves to `.playwright-cli/`)
+4. `npx @playwright/cli -s=<session> snapshot` — accessibility tree for element refs
 
 ### Session Management
 
