@@ -4,7 +4,6 @@ description: "image, gen, generate, create, draw, picture, 幫我生成圖片, �
 version: 0.4.1
 tools: Task, Bash, Read
 argument-hint: "描述想要的圖片（中文或英文皆可）"
-disable-model-invocation: true
 ---
 
 # Image Gen
