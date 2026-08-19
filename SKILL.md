@@ -1,6 +1,6 @@
 ---
 name: image-gen
-description: "image, gen, generate, create, draw, picture, 幫我生成圖片, 產生圖片, 用 Grok 生成圖片, 用 Gemini 生成圖片"
+description: "image, gen, generate, create, draw, picture, 幫我生成圖片, 產生圖片, 用 Grok 生成圖片, 用 Gemini 生成圖片。只要提示詞不出圖用 /image-prompt，修改既有圖片用 /image-edit，不確定用 /prompt-router"
 version: 0.4.1
 tools: Task, Bash, Read
 argument-hint: "描述想要的圖片（中文或英文皆可）"
